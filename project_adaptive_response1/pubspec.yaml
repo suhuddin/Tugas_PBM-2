@@ -1,0 +1,25 @@
+name: project_adaptive_response
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.18.0 <3.0.0"  # Tentukan versi SDK Flutter yang sesuai, pastikan lebih rendah dari 3.0.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  flutter_adaptive_scaffold: ^0.1.6
+  audioplayers: ^0.20.1  # Jika perlu, tambahkan audioplayers atau dependensi lainnya
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/foto_profil.jpg  # Pastikan path gambar sudah benar
