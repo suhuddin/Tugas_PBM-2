@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-// Kelas untuk merepresentasikan data item
+// Model class representing an item
 class Item {
   final int id;
   final String name;
@@ -8,18 +8,50 @@ class Item {
   Item({required this.id, required this.name});
 }
 
-// Kelas untuk parsing informasi rute
+// ---------------------------
+// Route path configuration
+// ---------------------------
+class RoutePath {
+  final bool isHome;
+  final int? id;
+  final bool isSettings;
+
+  RoutePath.home()
+      : isHome = true,
+        id = null,
+        isSettings = false;
+
+  RoutePath.detail(this.id)
+      : isHome = false,
+        isSettings = false;
+
+  RoutePath.settings()
+      : isHome = false,
+        id = null,
+        isSettings = true;
+
+  bool get isDetail => id != null;
+}
+
+// ---------------------------
+// Route information parser
+// ---------------------------
 class AppRouteInformationParser extends RouteInformationParser<RoutePath> {
   @override
   Future<RoutePath> parseRouteInformation(RouteInformation routeInformation) async {
     final uri = routeInformation.uri;
 
-    // Menangani rute root (/)
+    // Handle root (/)
     if (uri.pathSegments.isEmpty) {
       return RoutePath.home();
     }
 
-    // Menangani rute /detail/:id
+    // Handle /settings
+    if (uri.pathSegments.length == 1 && uri.pathSegments[0] == 'settings') {
+      return RoutePath.settings();
+    }
+
+    // Handle /detail/:id
     if (uri.pathSegments.length == 2 && uri.pathSegments[0] == 'detail') {
       final id = int.tryParse(uri.pathSegments[1]);
       if (id != null) {
@@ -27,12 +59,7 @@ class AppRouteInformationParser extends RouteInformationParser<RoutePath> {
       }
     }
 
-    // Menangani rute /settings
-    if (uri.pathSegments.length == 1 && uri.pathSegments[0] == 'settings') {
-      return RoutePath.settings();
-    }
-
-    // Kembali ke home jika rute tidak dikenali
+    // Fallback to home for unrecognised routes
     return RoutePath.home();
   }
 
@@ -51,61 +78,52 @@ class AppRouteInformationParser extends RouteInformationParser<RoutePath> {
   }
 }
 
-// Kelas untuk konfigurasi rute
-class RoutePath {
-  final bool isHome;
-  final bool isSettings;
-  final int? id;
-
-  RoutePath.home()
-      : isHome = true,
-        isSettings = false,
-        id = null;
-
-  RoutePath.detail(this.id) : isHome = false, isSettings = false;
-
-  RoutePath.settings() : isHome = false, isSettings = true, id = null;
-
-  bool get isDetail => !isHome && !isSettings;
-}
-
-// Kelas untuk router delegate
+// ---------------------------
+// Router delegate
+// ---------------------------
 class AppRouterDelegate extends RouterDelegate<RoutePath>
     with ChangeNotifier, PopNavigatorRouterDelegateMixin<RoutePath> {
   @override
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   int? _selectedItemId;
+  bool _showSettings = false;
+
   final List<Item> _items = [
     Item(id: 1, name: 'Item 1'),
     Item(id: 2, name: 'Item 2'),
     Item(id: 3, name: 'Item 3'),
   ];
 
-  // Mengatur item yang dipilih
+  // -------- Navigation helpers --------
   void selectItem(int id) {
     _selectedItemId = id;
+    _showSettings = false;
     notifyListeners();
   }
 
-  // Kembali ke home
   void goHome() {
     _selectedItemId = null;
+    _showSettings = false;
     notifyListeners();
   }
 
-  // Navigasi ke settings
-  void goSettings() {
+  void goToSettings() {
     _selectedItemId = null;
+    _showSettings = true;
     notifyListeners();
   }
 
+  // -------- RouterDelegate overrides --------
   @override
   RoutePath get currentConfiguration {
-    if (_selectedItemId == null) {
-      return RoutePath.home();
+    if (_showSettings) {
+      return RoutePath.settings();
     }
-    return RoutePath.detail(_selectedItemId);
+    if (_selectedItemId != null) {
+      return RoutePath.detail(_selectedItemId);
+    }
+    return RoutePath.home();
   }
 
   @override
@@ -113,16 +131,16 @@ class AppRouterDelegate extends RouterDelegate<RoutePath>
     return Navigator(
       key: navigatorKey,
       pages: [
-        // Selalu tampilkan HomeScreen
+        // Home page – always present
         MaterialPage(
           key: const ValueKey('HomeScreen'),
           child: HomeScreen(
             items: _items,
             onItemSelected: selectItem,
-            onSettingsTapped: goSettings, // Pass goSettings to HomeScreen
+            onSettingsTapped: goToSettings,
           ),
         ),
-        // Tampilkan DetailScreen jika ada item yang dipilih
+        // Detail page
         if (_selectedItemId != null)
           MaterialPage(
             key: ValueKey('DetailScreen-$_selectedItemId'),
@@ -131,18 +149,22 @@ class AppRouterDelegate extends RouterDelegate<RoutePath>
               onBack: goHome,
             ),
           ),
-        // Tampilkan SettingsScreen jika dipilih
-        if (_selectedItemId == null && currentConfiguration.isSettings)
-          MaterialPage(
-            key: const ValueKey('SettingsScreen'),
-            child: SettingsScreen(
-              onBack: goHome,
-            ),
+        // Settings page
+        if (_showSettings)
+          const MaterialPage(
+            key: ValueKey('SettingsScreen'),
+            child: SettingsScreen(),
           ),
       ],
       onPopPage: (route, result) {
         if (!route.didPop(result)) return false;
-        goHome();
+        // If settings is visible, close it – otherwise go home
+        if (_showSettings) {
+          _showSettings = false;
+        } else {
+          _selectedItemId = null;
+        }
+        notifyListeners();
         return true;
       },
     );
@@ -152,65 +174,55 @@ class AppRouterDelegate extends RouterDelegate<RoutePath>
   Future<void> setNewRoutePath(RoutePath path) async {
     if (path.isHome) {
       _selectedItemId = null;
+      _showSettings = false;
     } else if (path.isDetail && path.id != null) {
       _selectedItemId = path.id;
+      _showSettings = false;
     } else if (path.isSettings) {
       _selectedItemId = null;
+      _showSettings = true;
     }
   }
 }
 
-// Halaman pengaturan (SettingsScreen)
-class SettingsScreen extends StatelessWidget {
-  final VoidCallback onBack;
+// ---------------------------
+// Main application
+// ---------------------------
+void main() {
+  runApp(const MyApp());
+}
 
-  const SettingsScreen({
-    super.key,
-    required this.onBack,
-  });
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        centerTitle: true,
+    return MaterialApp.router(
+      title: 'Deep Linking App',
+      theme: ThemeData(
+        primarySwatch: Colors.teal,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+        textTheme: const TextTheme(bodyMedium: TextStyle(fontSize: 16)),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Settings Page',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: onBack,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                textStyle: const TextStyle(fontSize: 16),
-              ),
-              child: const Text('Back to Home'),
-            ),
-          ],
-        ),
-      ),
+      routerDelegate: AppRouterDelegate(),
+      routeInformationParser: AppRouteInformationParser(),
     );
   }
 }
 
-// Layar Utama (HomeScreen)
+// ---------------------------
+// Home screen
+// ---------------------------
 class HomeScreen extends StatelessWidget {
   final List<Item> items;
   final Function(int) onItemSelected;
-  final VoidCallback onSettingsTapped; // Callback untuk pengaturan
+  final VoidCallback onSettingsTapped;
 
   const HomeScreen({
     super.key,
     required this.items,
     required this.onItemSelected,
-    required this.onSettingsTapped, // Terima callback
+    required this.onSettingsTapped,
   });
 
   @override
@@ -220,10 +232,9 @@ class HomeScreen extends StatelessWidget {
         title: const Text('Home'),
         centerTitle: true,
         actions: [
-          // Tombol pengaturan menggunakan IconButton
           IconButton(
-            icon: const Icon(Icons.settings), // Ikon gear
-            onPressed: onSettingsTapped, // Panggil callback untuk navigasi ke Settings
+            icon: const Icon(Icons.settings),
+            onPressed: onSettingsTapped,
           ),
         ],
       ),
@@ -243,7 +254,9 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-// Layar Detail (DetailScreen)
+// ---------------------------
+// Detail screen
+// ---------------------------
 class DetailScreen extends StatelessWidget {
   final Item item;
   final VoidCallback onBack;
@@ -289,27 +302,25 @@ class DetailScreen extends StatelessWidget {
   }
 }
 
-// Aplikasi utama
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+// ---------------------------
+// Settings screen
+// ---------------------------
+class SettingsScreen extends StatelessWidget {
+  const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'Deep Linking App',
-      theme: ThemeData(
-        primarySwatch: Colors.teal,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        textTheme: const TextTheme(
-          bodyMedium: TextStyle(fontSize: 16),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Settings'),
+        centerTitle: true,
+      ),
+      body: const Center(
+        child: Text(
+          'Settings Page',
+          style: TextStyle(fontSize: 18),
         ),
       ),
-      routerDelegate: AppRouterDelegate(),
-      routeInformationParser: AppRouteInformationParser(),
     );
   }
 }

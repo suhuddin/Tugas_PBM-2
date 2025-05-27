@@ -74,7 +74,7 @@ class HomeScreen extends StatelessWidget {
             // Tombol untuk named route ke SettingsScreen
             ElevatedButton(
               onPressed: () {
-                Navigator.pushNamed(context, '/settings', arguments: 'John Doe');
+                Navigator.pushNamed(context, '/settings', arguments: 'alul');
               },
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
@@ -200,7 +200,7 @@ class AboutScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              'This is a simple app demonstrating navigation in Flutter.',
+              'ini adalah halaman about',
               style: TextStyle(fontSize: 18),
               textAlign: TextAlign.center,
             ),
