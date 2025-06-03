@@ -1,0 +1,27 @@
+[
+  {
+    "id": 1,
+    "name": "Minum 8 Gelas Air",
+    "description": "Pastikan tubuh terhidrasi dengan baik."
+  },
+  {
+    "id": 2,
+    "name": "Baca Buku 30 Menit",
+    "description": "Tingkatkan pengetahuan dan imajinasi."
+  },
+  {
+    "id": 3,
+    "name": "Stretching Pagi",
+    "description": "Regangkan otot untuk memulai hari."
+  },
+  {
+    "id": 4,
+    "name": "Belajar Flutter 1 Jam",
+    "description": "Konsisten untuk menguasai Flutter."
+  },
+  {
+    "id": 5,
+    "name": "Meditasi 10 Menit",
+    "description": "Tenangkan pikiran dan fokus."
+  }
+]

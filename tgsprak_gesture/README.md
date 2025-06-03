@@ -1,7 +1,7 @@
 # Nama:
-Muhamad Suhuddin Jaballul Karim
+Jieo
 # NPM:
-4522210119
+4522210157
 
 ## Tujuan Praktikum
 Tujuan dari praktikum ini adalah untuk mempelajari pembuatan aplikasi interaktif berbasis Flutter dengan fokus pada interaksi pengguna dan pengenalan berbagai elemen UI seperti gesture detection, animasi, dan transisi antar halaman. Beberapa konsep yang dipelajari antara lain:
