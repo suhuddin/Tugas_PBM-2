@@ -1,0 +1,36 @@
+name: flutter_sqlite_manajemen_mahasiswa
+description: "A new Flutter project."
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Dependensi untuk database SQLite
+  sqflite: ^2.3.0 # Atau versi terbaru yang kompatibel
+  path_provider: ^2.1.3 # Atau versi terbaru yang kompatibel
+  path: ^1.9.0 # Atau versi terbaru yang kompatibel
+
+  # Ikon standar
+  cupertino_icons: ^1.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0 # Atau versi terbaru
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/login_page.png
+    - assets/images/tampilan_awal.png
+    - assets/images/input_data.png
+    - assets/images/data_ditambah.png
+    - assets/images/edit_data.png
+    - assets/images/setelah_edit.png
+    - assets/images/data_dihapus.png
+    - assets/images/konfirmasi_hapus.png
